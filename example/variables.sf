@@ -1,0 +1,6 @@
+var(
+  url1        = "https://objectif-revision-backend-app-deploy.onrender.com/auth/signin"
+  url2      = "https://objectif-revision-backend-app-deploy.onrender.com/admin-startup/users/teachers"
+  contentType = "application/json"
+)
+

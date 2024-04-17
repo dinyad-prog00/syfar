@@ -1,0 +1,8 @@
+- Manage errors
+- Add Auth management, save for reuse
+- Implement other providers (kafa, db, ...)
+- Implemente other reporters (junit, json, html ...)
+- Add more advanced assertions 
+- Add support for opperator on assertion (or, and, xor, ...) 
+- Add mock feature
+- Add reusable feature
