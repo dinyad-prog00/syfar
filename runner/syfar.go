@@ -3,14 +3,11 @@ package runner
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"syfar/parser"
 	"syfar/providers"
 	"syfar/reporters"
 	"syfar/types"
-
-	"github.com/alecthomas/participle/v2"
 )
 
 type Syfar struct {
@@ -29,7 +26,7 @@ func (s Syfar) RegisterActionProvider(key string, p providers.ActionProvider) {
 	s.actionsProviders[key] = p
 }
 
-func (s Syfar) GetActionFunc(key string) (providers.ActionFunc, error) {
+func (s Syfar) GetAction(key string) (*providers.Action, error) {
 	keys := strings.Split(key, "_")
 	if len(keys) != 2 {
 		return nil, fmt.Errorf("Error getting action function, key should be provider_action")
@@ -38,11 +35,11 @@ func (s Syfar) GetActionFunc(key string) (providers.ActionFunc, error) {
 	if p == nil {
 		return nil, fmt.Errorf("Error getting action provider: %s", keys[0])
 	}
-	f := p.ActionsFuncs()[keys[1]]
-	if f == nil {
+	act, ok := p.GetActions()[keys[1]]
+	if !ok {
 		return nil, fmt.Errorf("Error getting action: %s", key)
 	}
-	return f, nil
+	return &act, nil
 
 }
 
@@ -52,25 +49,32 @@ func (s Syfar) Init() {
 	}
 }
 
-func (s Syfar) Run(filedir string, filename string) {
-	var ps = participle.MustBuild[parser.SyfarFile](participle.Unquote())
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprintf("Erreur lors de la lecture du fichier: %v", err))
-	}
-	ast, err := ps.ParseString(filename, string(content))
+func (s Syfar) Validate(filedir string, filename string) (*parser.SyfarFile, context.Context, error) {
 
+	ast, err := ParseFile(filedir, filename)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
-	fimport := GetFromImport(*ast, ps, filedir)
-	ast.Entries = PrependManyToList(ast.Entries, fimport)
+	err = ValidateSyfarFile(*ast)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	ctx := context.Background()
 	SetValueToContext(&ctx, "syfar.rootdir", parser.Value{String: &filedir})
 
 	InitializeContext(&ctx, *ast)
+
+	err = ValidateActions(&ctx, s, *ast)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ast, ctx, nil
+}
+
+func (s Syfar) Run(ast *parser.SyfarFile, ctx context.Context) error {
 
 	result := []types.TestResult{}
 
@@ -87,10 +91,9 @@ func (s Syfar) Run(filedir string, filename string) {
 		case v.Action != nil:
 			ri, err := RunAction(&ctx, s, *v.Action, i)
 			if err != nil {
-				fmt.Println(err)
-			} else {
-				result = append(result, ri...)
+				return err
 			}
+			result = append(result, ri...)
 
 		case v.Stepper != nil:
 			ri, _ := RunStepper(&ctx, s, *v.Stepper, i)
@@ -107,4 +110,6 @@ func (s Syfar) Run(filedir string, filename string) {
 		reporters.ConsoleReporter(result)
 		fmt.Println("\n___________________________________________________________________")
 	}
+
+	return nil
 }

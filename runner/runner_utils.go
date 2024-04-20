@@ -17,7 +17,7 @@ import (
 	t "syfar/parser"
 	rt "syfar/types"
 
-	"github.com/alecthomas/participle/lexer"
+	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/fsamin/go-dump"
 )
 
@@ -262,7 +262,7 @@ func PrefixString(initial string, prefix *string, sep string) string {
 	return fmt.Sprintf("%s%s%s", *prefix, sep, initial)
 }
 
-func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*t.Test, []*t.Out) {
+func FilterActionAttributes(action t.Action, setPrefix bool) ([]*t.Assignment, []*t.TestSet, []*t.Test, []*t.Out) {
 	params := []*t.Assignment{}
 	testSets := []*t.TestSet{}
 	tests := []*t.Test{}
@@ -273,11 +273,14 @@ func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*
 		case attr.Parameter != nil:
 			params = append(params, attr.Parameter)
 		case attr.TestSet != nil:
-
-			attr.TestSet.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.TestSet.Description), action.Prefix, " > ")
+			if setPrefix {
+				attr.TestSet.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.TestSet.Description), action.Prefix, " > ")
+			}
 			testSets = append(testSets, attr.TestSet)
 		case attr.Test != nil:
-			attr.Test.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.Test.Description), action.Prefix, " > ")
+			if setPrefix {
+				attr.Test.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.Test.Description), action.Prefix, " > ")
+			}
 			tests = append(tests, attr.Test)
 		case attr.Out != nil:
 			outs = append(outs, attr.Out)
@@ -286,7 +289,7 @@ func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*
 	return params, testSets, tests, outs
 }
 
-func ActionParametersToStringJSON(ctx *context.Context, params []*t.Assignment) (string, error) {
+func ActionParametersToStringJSON(ctx *context.Context, params []*t.Assignment, inputs []rt.Input) (string, error) {
 	result := make(map[string]interface{})
 	for _, param := range params {
 		result[param.Name] = GetValue(ctx, *param.Value)

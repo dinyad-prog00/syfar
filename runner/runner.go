@@ -3,11 +3,30 @@ package runner
 import (
 	"context"
 	"fmt"
+	"os"
 	as "syfar/assertions"
 	t "syfar/parser"
 	pvd "syfar/providers"
 	rt "syfar/types"
+
+	"github.com/alecthomas/participle/v2"
 )
+
+func ParseFile(filedir string, filename string) (*t.SyfarFile, error) {
+	var ps = participle.MustBuild[t.SyfarFile](participle.Unquote())
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la lecture du fichier: %v", err)
+	}
+	ast, err := ps.ParseString(filename, string(content))
+
+	if err != nil {
+		return nil, err
+	}
+	fimport := GetFromImport(*ast, ps, filedir)
+	ast.Entries = PrependManyToList(ast.Entries, fimport)
+	return ast, nil
+}
 
 func RunExpectationItem(ctx *context.Context, rctx *rt.ActionResultContext, item t.ExpectationItem, index int) (rt.ExpectationItemResult, error) {
 	if item.Symbolic == nil {
@@ -89,17 +108,26 @@ func RunAction(ctx *context.Context, s Syfar, action t.Action, index int) ([]rt.
 
 	result := []rt.TestResult{}
 
-	actfunc, err := s.GetActionFunc(action.Type)
+	act, err := s.GetAction(action.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	params, testSets, tests, outs := FilterActionAttributes(action)
-	jsonData, err := ActionParametersToStringJSON(ctx, params)
+	actfunc := act.ActionFunc
+
+	params, testSets, tests, outs := FilterActionAttributes(action, true)
+	valErr := ValidateAction(ctx, action, params, act.Inputs)
+	if valErr != nil {
+		return nil, valErr
+	}
+	jsonData, err := ActionParametersToStringJSON(ctx, params, act.Inputs)
 	if err != nil {
 		return nil, err
 	}
-	rst := actfunc(ctx, jsonData)
+	rst, err := actfunc(ctx, jsonData)
+	if err != nil {
+		return nil, err
+	}
 
 	rctx := rt.ActionResultContext{Result: rst}
 

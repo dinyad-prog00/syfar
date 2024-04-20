@@ -8,37 +8,47 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"reflect"
 	"strings"
 	pvd "syfar/providers"
+	t "syfar/types"
 )
+
+/**
+Input config
+*/
+
+var RequestInput = []t.Input{
+	{Name: "url", Type: reflect.String, Required: true},
+	{Name: "method", Type: reflect.String, Required: false},
+	{Name: "body", Type: reflect.Map, Required: false},
+	{Name: "headers", Type: reflect.Map, Required: false},
+}
 
 // HTTP Action Provider
 type ActionProvider struct {
-	Actions map[string]pvd.ActionFunc
+	Actions map[string]pvd.Action
 }
 
 func (p *ActionProvider) Init() {
-	p.Actions = make(map[string]pvd.ActionFunc)
-	p.Actions["request"] = p.Request
+	p.Actions = make(map[string]pvd.Action)
+	p.Actions["request"] = pvd.Action{ActionFunc: p.Request, Inputs: RequestInput}
 }
 
-func (p *ActionProvider) ActionsFuncs() map[string]pvd.ActionFunc {
+func (p *ActionProvider) GetActions() map[string]pvd.Action {
 	return p.Actions
 }
 
-func (p *ActionProvider) Request(ctx *context.Context, params interface{}) interface{} {
+func (p *ActionProvider) Request(ctx *context.Context, params interface{}) (interface{}, error) {
 	paramString, ok := params.(string)
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("params arg should be a string")
 	}
 
 	input, err := pvd.JsonParametersToProviderInputType[HTTPRequest](paramString)
 	if err != nil {
 		fmt.Println(err)
-		return nil
-	}
-	if !ok {
-		return nil
+		return nil, err
 	}
 
 	httpP := HttpProvider{}
@@ -48,7 +58,7 @@ func (p *ActionProvider) Request(ctx *context.Context, params interface{}) inter
 type HttpProvider struct {
 }
 
-func (p *HttpProvider) Do(input HTTPRequest) interface{} {
+func (p *HttpProvider) Do(input HTTPRequest) (interface{}, error) {
 	// Initialisation de la structure Result
 
 	result := Result{
@@ -57,13 +67,13 @@ func (p *HttpProvider) Do(input HTTPRequest) interface{} {
 	body, err := json.Marshal(input.Body)
 	if err != nil {
 		result.Err = err.Error()
-		return result
+		return result, err
 	}
 	// Création de la requête HTTP
 	req, err := http.NewRequest(input.Method, input.URL, bytes.NewBufferString(string(body)))
 	if err != nil {
 		result.Err = err.Error()
-		return result
+		return result, err
 	}
 
 	// Configuration des en-têtes de la requête
@@ -76,7 +86,7 @@ func (p *HttpProvider) Do(input HTTPRequest) interface{} {
 	resp, err := client.Do(req)
 	if err != nil {
 		result.Err = err.Error()
-		return result
+		return result, err
 	}
 
 	result.Status = resp.Status
@@ -93,7 +103,7 @@ func (p *HttpProvider) Do(input HTTPRequest) interface{} {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			result.Err = err.Error()
-			return result
+			return result, err
 		}
 
 		result.Body = string(body)
@@ -114,7 +124,7 @@ func (p *HttpProvider) Do(input HTTPRequest) interface{} {
 		}
 	}
 	// Retour du résultat
-	return result
+	return result, nil
 }
 
 // From venom

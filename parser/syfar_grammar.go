@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/alecthomas/participle/lexer"
+import "github.com/alecthomas/participle/v2/lexer"
 
 // Package parser implements a parser for Syfar Test Language syntax.
 
@@ -26,6 +26,7 @@ type Action struct {
 	Id         string `parser:" @(Ident|String)"`
 	Prefix     *string
 	Attributes []*ActionAttribute `parser:" '{' @@* '}'"`
+	Pos        lexer.Position
 }
 
 type ActionAttribute struct {
@@ -98,13 +99,13 @@ type Variable struct {
 }
 
 type MultiVariable struct {
-	Id        string        `parser:"'var'"`
-	Variables []*Assignment `parser:" '(' @@* ')'"`
+	Variables []*Assignment `parser:"'var' '(' @@* ')'"`
 }
 
 type VarSet struct {
 	Id        string        `parser:"'vars' @(Ident|String)"`
 	Variables []*Assignment `parser:" '{' @@* '}'"`
+	Pos       lexer.Position
 }
 
 type Assignment struct {
@@ -116,6 +117,7 @@ type Assignment struct {
 type SecretSet struct {
 	Id        string        `parser:"'secrets' @(Ident|String)"`
 	Variables []*Assignment `parser:" '{' @@* '}'"`
+	Pos       lexer.Position
 }
 
 type Bool bool

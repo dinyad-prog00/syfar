@@ -1,5 +1,7 @@
 package types
 
+import "reflect"
+
 type ExpectationItemResult struct {
 	Id      int
 	Passed  bool
@@ -25,7 +27,7 @@ type ActionResult struct {
 
 type Input struct {
 	Name     string
-	Type     string
+	Type     reflect.Kind
 	Required bool
 }
 
