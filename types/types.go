@@ -1,19 +1,37 @@
 package types
 
+import "reflect"
+
+type TestState int8
+
+const (
+	StatePassed TestState = iota
+	StateSkipped
+	StateFailed
+)
+
 type ExpectationItemResult struct {
 	Id      int
 	Passed  bool
 	Message string
 }
+
 type ExpectationResult struct {
 	Id     int
 	Passed bool
 	Items  []ExpectationItemResult
 }
 
+type SyfarResult struct {
+	TestsResult   []TestResult
+	NbTestsPassed int
+	NbTestsFailed int
+	NbTestSkipped int
+}
+
 type TestResult struct {
 	Id           int
-	Passed       bool
+	State        TestState
 	Description  string
 	Expectations []ExpectationResult
 }
@@ -25,7 +43,7 @@ type ActionResult struct {
 
 type Input struct {
 	Name     string
-	Type     string
+	Type     reflect.Kind
 	Required bool
 }
 

@@ -1,0 +1,33 @@
+import("variables.sf", "secrets.sf")
+
+print {
+    "Hello World!"
+}
+
+print {
+    var.syfar
+    secrets.s1.username
+}
+
+var id = 2
+action "http_request" myreq {
+    url = var.url
+    method= var.method
+    params = {
+        id : var.id
+    }
+    test "Test name" {
+        expect {
+           r.statusCode eq 200
+           r.json.id eq var.id
+        }
+    }
+
+    out {
+        data = r.json
+    }
+}
+
+print {
+    myreq.data
+}

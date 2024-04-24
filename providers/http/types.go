@@ -17,12 +17,14 @@ type Result struct {
 }
 
 type HTTPRequest struct {
-	URL      string      `json:"url,omitempty"`
-	Method   string      `json:"method,omitempty"`
-	Body     interface{} `json:"body,omitempty"`
-	Headers  Headers     `json:"headers,omitempty"`
-	Form     url.Values  `json:"form,omitempty"`
-	PostForm url.Values  `json:"post_form,omitempty"`
+	URL      string                 `json:"url,omitempty"`
+	Method   string                 `json:"method,omitempty"`
+	Params   map[string]interface{} `json:"params,omitempty"`
+	Query    map[string]interface{} `json:"query,omitempty"`
+	Body     interface{}            `json:"body,omitempty"`
+	Headers  Headers                `json:"headers,omitempty"`
+	Form     url.Values             `json:"form,omitempty"`
+	PostForm url.Values             `json:"post_form,omitempty"`
 }
 
 type Headers map[string]string

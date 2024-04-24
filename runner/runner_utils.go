@@ -11,13 +11,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	t "syfar/parser"
 	rt "syfar/types"
 
-	"github.com/alecthomas/participle/lexer"
+	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/fsamin/go-dump"
 )
 
@@ -262,7 +263,7 @@ func PrefixString(initial string, prefix *string, sep string) string {
 	return fmt.Sprintf("%s%s%s", *prefix, sep, initial)
 }
 
-func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*t.Test, []*t.Out) {
+func FilterActionAttributes(action t.Action, setPrefix bool) ([]*t.Assignment, []*t.TestSet, []*t.Test, []*t.Out) {
 	params := []*t.Assignment{}
 	testSets := []*t.TestSet{}
 	tests := []*t.Test{}
@@ -273,11 +274,14 @@ func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*
 		case attr.Parameter != nil:
 			params = append(params, attr.Parameter)
 		case attr.TestSet != nil:
-
-			attr.TestSet.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.TestSet.Description), action.Prefix, " > ")
+			if setPrefix {
+				attr.TestSet.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.TestSet.Description), action.Prefix, " > ")
+			}
 			testSets = append(testSets, attr.TestSet)
 		case attr.Test != nil:
-			attr.Test.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.Test.Description), action.Prefix, " > ")
+			if setPrefix {
+				attr.Test.Description = PrefixString(fmt.Sprintf("%s: %s > %s", action.Type, action.Id, attr.Test.Description), action.Prefix, " > ")
+			}
 			tests = append(tests, attr.Test)
 		case attr.Out != nil:
 			outs = append(outs, attr.Out)
@@ -286,7 +290,7 @@ func FilterActionAttributes(action t.Action) ([]*t.Assignment, []*t.TestSet, []*
 	return params, testSets, tests, outs
 }
 
-func ActionParametersToStringJSON(ctx *context.Context, params []*t.Assignment) (string, error) {
+func ActionParametersToStringJSON(ctx *context.Context, params []*t.Assignment, inputs []rt.Input) (string, error) {
 	result := make(map[string]interface{})
 	for _, param := range params {
 		result[param.Name] = GetValue(ctx, *param.Value)
@@ -339,12 +343,18 @@ func EncryptString(key []byte, plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func JsonString(data interface{}) interface{} {
-	json, err := json.Marshal(data)
-	if err != nil {
-		return data
+func JsonString(ctx *context.Context, data t.Value) interface{} {
+	value := GetValue(ctx, data)
+	switch v := reflect.ValueOf(value); v.Kind() {
+	case reflect.Array, reflect.Map:
+		jsonData, err := json.MarshalIndent(value, "  ", "\t")
+		if err != nil {
+			return value
+		}
+		return string(jsonData)
+	default:
+		return value
 	}
-	return string(json)
 }
 
 func GetPartAfterArray(s string) (string, bool) {
@@ -411,6 +421,24 @@ func GetValueFromContextOrResult(ctx *context.Context, rctx rt.ActionResultConte
 		return value
 	}
 	return GetValueFromContext(*ctx, indentifier)
+}
+
+func BuildSyfarResult(testsResult []rt.TestResult) rt.SyfarResult {
+	nbPassed := 0
+	nbFailed := 0
+	nbSkipped := 0
+	for _, r := range testsResult {
+		switch r.State {
+		case rt.StatePassed:
+			nbPassed++
+		case rt.StateFailed:
+			nbFailed++
+		case rt.StateSkipped:
+			nbSkipped++
+		}
+	}
+
+	return rt.SyfarResult{TestsResult: testsResult, NbTestsPassed: nbPassed, NbTestsFailed: nbFailed, NbTestSkipped: nbSkipped}
 }
 
 var GET = "GET"
