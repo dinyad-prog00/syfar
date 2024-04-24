@@ -72,6 +72,12 @@ var Run = &cobra.Command{
 
 func initProject(args []string) error {
 	var projectDir string
+	copyFromDir := ""
+	if fileExists("/usr/local/share/syfar/example") {
+		copyFromDir = "/usr/local/share/syfar/example"
+	} else {
+		copyFromDir = "example"
+	}
 
 	wdir, err := os.Getwd()
 	if err != nil {
@@ -88,7 +94,7 @@ func initProject(args []string) error {
 	if err != nil {
 		return err
 	}
-	return CopyDir("./example/get_started", projectDir)
+	return CopyDir(filepath.Join(copyFromDir, "get_started"), projectDir)
 }
 
 func validate(args []string) (*runner.Syfar, *parser.SyfarFile, context.Context, error) {
