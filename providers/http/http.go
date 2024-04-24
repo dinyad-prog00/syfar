@@ -21,6 +21,8 @@ Input config
 var RequestInput = []t.Input{
 	{Name: "url", Type: reflect.String, Required: true},
 	{Name: "method", Type: reflect.String, Required: false},
+	{Name: "params", Type: reflect.Map, Required: false},
+	{Name: "query", Type: reflect.Map, Required: false},
 	{Name: "body", Type: reflect.Map, Required: false},
 	{Name: "headers", Type: reflect.Map, Required: false},
 }
@@ -69,8 +71,13 @@ func (p *HttpProvider) Do(input HTTPRequest) (interface{}, error) {
 		result.Err = err.Error()
 		return result, err
 	}
+	reqUrl, err := buildUrl(input.URL, input.Params, input.Query)
+	if err != nil {
+		result.Err = err.Error()
+		return result, err
+	}
 	// Création de la requête HTTP
-	req, err := http.NewRequest(input.Method, input.URL, bytes.NewBufferString(string(body)))
+	req, err := http.NewRequest(input.Method, reqUrl, bytes.NewBufferString(string(body)))
 	if err != nil {
 		result.Err = err.Error()
 		return result, err

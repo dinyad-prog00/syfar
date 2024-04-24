@@ -51,6 +51,7 @@ type TestSet struct {
 }
 
 type Test struct {
+	Skipped      bool           `parser:"@'~'?"`
 	Description  string         `parser:"'test' @String"`
 	Expectations []*Expectation `parser:" '{' @@* '}'"`
 }

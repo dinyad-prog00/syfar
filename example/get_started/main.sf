@@ -1,0 +1,35 @@
+/**
+    This is a simple example of using Syfar.
+    It is based on the “file” provider provided to quickly get started with Syfar.
+*/
+
+var filename = "file.txt"
+
+action file_read f {
+    path = var.filename
+
+    test "Test on content" {
+        expect {
+            r.content eq "Welcome to Syfar. Enjoy!"
+        }
+    }
+
+    /**
+     This test will be skipped
+     Remove '~' to not skipped
+    */
+    ~test "Skipped test" {
+        expect {
+            var.filename eq "I will fail if not skipped"
+        }
+    }
+    out {
+        text = r.content
+    }
+}
+
+
+// Use print to output on console
+print {
+    f.text
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"syfar/parser"
 	file "syfar/providers/file"
 	http "syfar/providers/http"
@@ -20,7 +21,29 @@ func New() *cobra.Command {
 	}
 	rootCmd.AddCommand(Run)
 	rootCmd.AddCommand(Validate)
+	Init.LocalFlags().StringP("template", "t", "", "Choose a project template")
+	rootCmd.AddCommand(Init)
 	return rootCmd
+}
+
+var Init = &cobra.Command{
+	Use:   "init",
+	Short: "Init syfar project",
+	Args:  cobra.RangeArgs(0, 1),
+	Run: func(cmd *cobra.Command, args []string) {
+		err := initProject(args)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "syfar: Error\n%v\n", err)
+		} else {
+			fmt.Println("\x1b[32mSyfar project create successfully!\x1b[0m\n\nUse the following to run your:")
+			if len(args) == 1 {
+				fmt.Printf("\ncd %s\nsyfar run\n", args[0])
+			} else {
+				fmt.Println("syfar run")
+			}
+		}
+
+	},
 }
 
 var Validate = &cobra.Command{
@@ -45,6 +68,27 @@ var Run = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "syfar: Error\n%v\n", err)
 		}
 	},
+}
+
+func initProject(args []string) error {
+	var projectDir string
+
+	wdir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	if len(args) >= 1 {
+		projectDir = filepath.Join(wdir, args[0])
+	} else {
+		projectDir = wdir
+	}
+
+	err = initSyfarJson(projectDir)
+	if err != nil {
+		return err
+	}
+	return CopyDir("./example/get_started", projectDir)
 }
 
 func validate(args []string) (*runner.Syfar, *parser.SyfarFile, context.Context, error) {

@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -342,12 +343,18 @@ func EncryptString(key []byte, plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func JsonString(data interface{}) interface{} {
-	json, err := json.Marshal(data)
-	if err != nil {
-		return data
+func JsonString(ctx *context.Context, data t.Value) interface{} {
+	value := GetValue(ctx, data)
+	switch v := reflect.ValueOf(value); v.Kind() {
+	case reflect.Array, reflect.Map:
+		jsonData, err := json.MarshalIndent(value, "  ", "\t")
+		if err != nil {
+			return value
+		}
+		return string(jsonData)
+	default:
+		return value
 	}
-	return string(json)
 }
 
 func GetPartAfterArray(s string) (string, bool) {
@@ -414,6 +421,24 @@ func GetValueFromContextOrResult(ctx *context.Context, rctx rt.ActionResultConte
 		return value
 	}
 	return GetValueFromContext(*ctx, indentifier)
+}
+
+func BuildSyfarResult(testsResult []rt.TestResult) rt.SyfarResult {
+	nbPassed := 0
+	nbFailed := 0
+	nbSkipped := 0
+	for _, r := range testsResult {
+		switch r.State {
+		case rt.StatePassed:
+			nbPassed++
+		case rt.StateFailed:
+			nbFailed++
+		case rt.StateSkipped:
+			nbSkipped++
+		}
+	}
+
+	return rt.SyfarResult{TestsResult: testsResult, NbTestsPassed: nbPassed, NbTestsFailed: nbFailed, NbTestSkipped: nbSkipped}
 }
 
 var GET = "GET"

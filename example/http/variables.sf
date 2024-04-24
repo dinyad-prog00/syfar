@@ -1,0 +1,6 @@
+var syfar="Syfar: testing language"
+
+var (
+    url = "https://jsonplaceholder.typicode.com/posts/:id"
+    method = "GET"
+)

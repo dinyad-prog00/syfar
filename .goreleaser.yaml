@@ -21,8 +21,8 @@ builds:
     main: ./cli
     goos:
       - linux
-      - windows
-      - darwin
+      #- windows
+      #- darwin
 
 nfpms:
   -
@@ -45,8 +45,8 @@ nfpms:
     # Formats to be generated.
     formats:
       - deb
-      - rpm
-      - apk
+      #- rpm
+      #- apk
 
 archives:
   - format: tar.gz
@@ -69,3 +69,7 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+release:
+  extra_files:
+  - glob: ./example/get_started/main.sf

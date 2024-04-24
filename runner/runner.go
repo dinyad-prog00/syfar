@@ -61,7 +61,11 @@ func RunExpectation(ctx *context.Context, rctx *rt.ActionResultContext, exp t.Ex
 }
 
 func RunTest(ctx *context.Context, rctx *rt.ActionResultContext, test t.Test, index int) (rt.TestResult, error) {
-	passed := true
+	if test.Skipped {
+		return rt.TestResult{Id: index, State: rt.StateSkipped, Expectations: []rt.ExpectationResult{}, Description: test.Description}, nil
+
+	}
+	passed := rt.StatePassed
 	result := []rt.ExpectationResult{}
 
 	for i, exp := range test.Expectations {
@@ -70,10 +74,10 @@ func RunTest(ctx *context.Context, rctx *rt.ActionResultContext, test t.Test, in
 		result = append(result, ri)
 
 		if !ri.Passed {
-			passed = false
+			passed = rt.StateFailed
 		}
 	}
-	return rt.TestResult{Id: index, Passed: passed, Expectations: result, Description: test.Description}, nil
+	return rt.TestResult{Id: index, State: passed, Expectations: result, Description: test.Description}, nil
 }
 
 func RunTestSet(ctx *context.Context, rctx *rt.ActionResultContext, set t.TestSet, index int) ([]rt.TestResult, error) {
@@ -170,9 +174,8 @@ func RunOut(ctx *context.Context, rctx *rt.ActionResultContext, id string, out t
 }
 
 func RunPrint(ctx *context.Context, print t.Print) {
-	fmt.Printf("%s: (print)\n", print.Pos.String())
+	fmt.Printf("\x1b[30m%s\x1b[0m\n", print.Pos.String())
 	for _, p := range print.Variables {
-		v := GetValue(ctx, *p)
-		fmt.Printf("\t%v\n", JsonString(v))
+		fmt.Printf("  %v\n\n", JsonString(ctx, *p))
 	}
 }

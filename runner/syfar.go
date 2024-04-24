@@ -10,6 +10,8 @@ import (
 	"syfar/types"
 )
 
+var Version = "0.0.2"
+
 type Syfar struct {
 	actionsProviders map[string]providers.ActionProvider
 	reporters        map[string]string
@@ -105,9 +107,11 @@ func (s Syfar) Run(ast *parser.SyfarFile, ctx context.Context) error {
 
 	}
 
+	syfarResult := BuildSyfarResult(result)
+
 	if len(result) != 0 {
-		fmt.Println("\n___________________________________________________________________")
-		reporters.ConsoleReporter(result)
+
+		reporters.ConsoleReporter(syfarResult)
 		fmt.Println("\n___________________________________________________________________")
 	}
 

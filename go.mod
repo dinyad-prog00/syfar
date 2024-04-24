@@ -3,7 +3,6 @@ module syfar
 go 1.18
 
 require (
-	github.com/alecthomas/participle v0.7.1
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/fsamin/go-dump v1.8.0
 	github.com/mitchellh/mapstructure v1.5.0
