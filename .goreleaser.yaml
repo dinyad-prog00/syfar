@@ -31,7 +31,7 @@ nfpms:
     
     # Your app's homepage.
     # Default is empty.
-    homepage: https://github.com/dahendel/docker-machine-cloudstack
+    homepage: https://github.com/dinyad-prog00/syfar
 
     # Your app's maintainer (probably you).
     # Default is empty.
@@ -47,6 +47,9 @@ nfpms:
       - deb
       #- rpm
       #- apk
+    contents:
+      - src: example/
+        dst: /usr/local/share/syfar/example
 
 archives:
   - format: tar.gz
@@ -62,6 +65,8 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    files:
+    - example/**/*
 
 changelog:
   sort: asc
@@ -72,4 +77,4 @@ changelog:
 
 release:
   extra_files:
-  - glob: ./example/get_started/main.sf
+  - glob: example/**/*
