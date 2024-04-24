@@ -21,8 +21,8 @@ builds:
     main: ./cli
     goos:
       - linux
-      #- windows
-      #- darwin
+      - windows
+      - darwin
 
 nfpms:
   -
@@ -45,8 +45,8 @@ nfpms:
     # Formats to be generated.
     formats:
       - deb
-      #- rpm
-      #- apk
+      - rpm
+      - apk
     contents:
       - src: example/
         dst: /usr/local/share/syfar/example
@@ -74,7 +74,3 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
-
-release:
-  extra_files:
-  - glob: example/**/*
