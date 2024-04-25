@@ -1,0 +1,56 @@
+name: Semantic Release - Next tag
+
+on:
+    push: 
+        branches: 
+            - main
+            - ci/release #test
+
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    goreleaser:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+
+        - name: Install Go SVU
+          run: |
+            echo 'deb [trusted=yes] https://apt.fury.io/caarlos0/ /' | sudo tee /etc/apt/sources.list.d/caarlos0.list
+            sudo apt update
+            sudo apt install svu
+        - name: Configure Git user
+          run: |
+            git config user.email "actions@github.com"
+            git config user.name "Automatic releaser workflow"
+
+        - name: Get current and next version 
+          id: version
+          run: |
+            git pull --rebase
+            prevVersion=$(cat version/VERSION)
+            nextVersion=$(svu next --strip-prefix)
+            echo "Current version: $prevVersion"
+            echo "Next version: $nextVersion"
+            echo "::set-output name=prevVersion::$prevVersion"
+            echo "::set-output name=nextVersion::$nextVersion"
+
+        - name: Update current version
+          if: ${{ steps.version.outputs.prevVersion }} != ${{ steps.version.outputs.nextVersion }}
+          run: |
+            echo "${{ steps.version.outputs.nextVersion }}" > version/VERSION 
+            git add version/VERSION
+            git commit -m "chore: bump to next version"
+            git push
+
+        - name: Create and push next tag 
+          if: ${{ steps.version.outputs.prevVersion }} != ${{ steps.version.outputs.nextVersion }}
+          run: |
+            git tag -a "${{ steps.version.outputs.nextVersion }}"
+            git pull origin "${{ steps.version.outputs.nextVersion }}"

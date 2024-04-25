@@ -9,6 +9,7 @@ import (
 	file "syfar/providers/file"
 	http "syfar/providers/http"
 	runner "syfar/runner"
+	"syfar/version"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +22,9 @@ func New() *cobra.Command {
 	}
 	rootCmd.AddCommand(Run)
 	rootCmd.AddCommand(Validate)
-	Init.LocalFlags().StringP("template", "t", "", "Choose a project template")
 	rootCmd.AddCommand(Init)
+	rootCmd.AddCommand(Version)
+
 	return rootCmd
 }
 
@@ -67,6 +69,15 @@ var Run = &cobra.Command{
 		if err := run(args); err != nil {
 			fmt.Fprintf(os.Stderr, "syfar: Error\n%v\n", err)
 		}
+	},
+}
+
+var Version = &cobra.Command{
+	Use:     "version",
+	Short:   "Display Version of Syfar",
+	Aliases: []string{"v"},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Syfar version: %s\n", version.Version)
 	},
 }
 

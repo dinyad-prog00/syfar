@@ -404,21 +404,23 @@ func Capitalize(value string) string {
 	return strings.ToUpper(value[:1]) + strings.ToLower(value[1:])
 }
 
-func GetValueFromContextOrResult(ctx *context.Context, rctx rt.ActionResultContext, indentifier string) interface{} {
-	indentifier = ResultToR(indentifier)
-	if rctx.DumpMapResult != nil && rctx.DumpMapResult[indentifier] != nil {
-		return rctx.DumpMapResult[indentifier]
-	}
+func GetValueFromContextOrResult(ctx *context.Context, rctx *rt.ActionResultContext, indentifier string) interface{} {
+	if rctx != nil {
+		indentifier = ResultToR(indentifier)
+		if rctx.DumpMapResult != nil && rctx.DumpMapResult[indentifier] != nil {
+			return rctx.DumpMapResult[indentifier]
+		}
 
-	indentifier2 := Capitalize(strings.Replace(indentifier, "result.", "", 1))
+		indentifier2 := Capitalize(strings.Replace(indentifier, "result.", "", 1))
 
-	value := GetMapValue(rctx.MapResult, indentifier2)
-	if value != nil {
-		return value
-	}
-	value = GetMapValue(rctx.Result, indentifier2)
-	if value != nil {
-		return value
+		value := GetMapValue(rctx.MapResult, indentifier2)
+		if value != nil {
+			return value
+		}
+		value = GetMapValue(rctx.Result, indentifier2)
+		if value != nil {
+			return value
+		}
 	}
 	return GetValueFromContext(*ctx, indentifier)
 }
