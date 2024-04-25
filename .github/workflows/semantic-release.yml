@@ -53,4 +53,4 @@ jobs:
           if: ${{ steps.version.outputs.prevVersion }} != ${{ steps.version.outputs.nextVersion }}
           run: |
             git tag -a "${{ steps.version.outputs.nextVersion }}" -m "Release new version: ${{ steps.version.outputs.nextVersion }}"
-            git pull origin "${{ steps.version.outputs.nextVersion }}"
+            git push origin "${{ steps.version.outputs.nextVersion }}"
