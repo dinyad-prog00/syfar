@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	v "syfar/runner"
+	v "syfar/version"
 )
 
 func buildPath(args []string) (string, string, error) {

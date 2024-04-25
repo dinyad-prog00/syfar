@@ -10,8 +10,6 @@ import (
 	"syfar/types"
 )
 
-var Version = "1.0.0"
-
 type Syfar struct {
 	actionsProviders map[string]providers.ActionProvider
 	reporters        map[string]string

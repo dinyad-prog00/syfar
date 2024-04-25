@@ -32,7 +32,7 @@ func RunExpectationItem(ctx *context.Context, rctx *rt.ActionResultContext, item
 	if item.Symbolic == nil {
 		return rt.ExpectationItemResult{}, fmt.Errorf("symbolic should not be null")
 	}
-	val := GetValueFromContextOrResult(ctx, *rctx, item.Symbolic.Key)
+	val := GetValueFromContextOrResult(ctx, rctx, item.Symbolic.Key)
 
 	err := as.ValueCompare(val, GetValue(ctx, *item.Symbolic.Value), item.Symbolic.Opp)
 
@@ -166,7 +166,7 @@ func RunAction(ctx *context.Context, s Syfar, action t.Action, index int) ([]rt.
 func RunOut(ctx *context.Context, rctx *rt.ActionResultContext, id string, out t.Out) error {
 
 	for _, v := range out.Variables {
-		val := GetValueFromContextOrResult(ctx, *rctx, v.Identifier)
+		val := GetValueFromContextOrResult(ctx, rctx, v.Identifier)
 		*ctx = context.WithValue(*ctx, contextKey(fmt.Sprintf("%s.%s", id, v.Name)), val)
 	}
 
