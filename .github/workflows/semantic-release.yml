@@ -4,7 +4,6 @@ on:
     push: 
         branches: 
             - main
-            - ci/release #test
 
     workflow_dispatch:
 
@@ -54,3 +53,17 @@ jobs:
           run: |
             git tag -a "${{ steps.version.outputs.nextVersion }}" -m "Release new version: ${{ steps.version.outputs.nextVersion }}"
             git push origin "${{ steps.version.outputs.nextVersion }}"
+
+        - name: Set up Go
+          uses: actions/setup-go@v5
+          with:
+              go-version: stable
+
+        - name: Run GoReleaser
+          uses: goreleaser/goreleaser-action@v5
+          with:
+                distribution: goreleaser
+                version: latest
+                args: release --clean
+          env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
