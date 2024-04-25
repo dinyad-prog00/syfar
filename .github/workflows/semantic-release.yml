@@ -12,7 +12,7 @@ permissions:
     contents: write
 
 jobs:
-    goreleaser:
+    semantic-releaser:
         runs-on: ubuntu-latest
         steps:
         - name: Checkout
@@ -52,5 +52,5 @@ jobs:
         - name: Create and push next tag 
           if: ${{ steps.version.outputs.prevVersion }} != ${{ steps.version.outputs.nextVersion }}
           run: |
-            git tag -a "${{ steps.version.outputs.nextVersion }}"
+            git tag -a "${{ steps.version.outputs.nextVersion }}" -m "Release new version: ${{ steps.version.outputs.nextVersion }}"
             git pull origin "${{ steps.version.outputs.nextVersion }}"
