@@ -20,7 +20,7 @@ action "http_request" myreq {
         expect {
            r.statusCode eq 200
            r.json.id eq var.id
-        }
+        }        
     }
 
     out {
